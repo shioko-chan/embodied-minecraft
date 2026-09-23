@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+.runtime/
+runs/
+*.sqlite*
+craftground.csv
+logs/

@@ -1,0 +1,29 @@
+id: survival-forest-7-adaptation
+name: Survival in forest
+seed: 7
+biome: forest
+difficulty:
+  weather: rain
+  resources: low
+  mobs: high
+events:
+- step: 30
+  kind: water_freezes
+  bounds:
+  - - -3
+    - 63
+    - 5
+  - - 3
+    - 63
+    - 7
+task:
+  kind: survival
+  max_steps: 600
+  start:
+  - 0
+  - 64
+  - 0
+  goal:
+    type: survive
+    duration_ticks: 400
+    minimum_health: 1

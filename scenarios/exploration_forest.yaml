@@ -1,0 +1,23 @@
+id: exploration-forest-7
+name: Exploration in forest
+seed: 7
+biome: forest
+difficulty:
+  weather: clear
+  resources: normal
+  mobs: low
+events: []
+task:
+  kind: exploration
+  max_steps: 300
+  start:
+  - 0
+  - 64
+  - 0
+  goal:
+    type: reach
+    target:
+    - 8
+    - 64
+    - -8
+    radius: 1.5

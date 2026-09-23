@@ -1,0 +1,148 @@
+id: building-forest-7
+name: Building in forest
+seed: 7
+biome: forest
+difficulty:
+  weather: clear
+  resources: normal
+  mobs: low
+events: []
+task:
+  kind: building
+  max_steps: 300
+  start:
+  - 0
+  - 64
+  - 0
+  goal:
+    type: build
+    structure: shelter
+    required_blocks:
+    - position:
+      - 4
+      - 64
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 64
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 64
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 5
+      - 64
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 64
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 64
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 64
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 65
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 65
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 65
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 5
+      - 65
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 65
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 65
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 65
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 66
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 66
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 4
+      - 66
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 5
+      - 66
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 5
+      - 66
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 5
+      - 66
+      - -4
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 66
+      - -6
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 66
+      - -5
+      block: minecraft:oak_planks
+    - position:
+      - 6
+      - 66
+      - -4
+      block: minecraft:oak_planks
+    required_empty:
+    - - 5
+      - 64
+      - -6
+    - - 5
+      - 64
+      - -5
+    - - 5
+      - 65
+      - -6
+    - - 5
+      - 65
+      - -5

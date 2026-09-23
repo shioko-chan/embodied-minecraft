@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcsociety"
+version = "0.1.0"
+description = "Reproducible embodied-agent experiments in Minecraft"
+license = "GPL-3.0-only"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "gymnasium>=1.1,<2",
+  "numpy>=2.2,<3",
+  "pillow>=11,<13",
+  "pydantic>=2.11,<3",
+  "PyYAML>=6,<7",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+  "websockets>=15,<17",
+  "psutil>=7,<8",
+]
+
+[project.optional-dependencies]
+minecraft = ["craftground==2.7.4", "torch>=2.3", "filelock>=3.18,<4"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.12"]
+
+[project.scripts]
+mcsociety = "mcsociety.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcsociety"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["minecraft: launches a real Minecraft client (requires explicit opt-in)"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
