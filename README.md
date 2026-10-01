@@ -1,14 +1,16 @@
 # MCSociety
 
-面向具身 AI 研究的 Minecraft 仿真环境。复用 **CraftGround 2.7.4 + Fabric + Minecraft 1.21 + Java 21**，把真实游戏传感器、动作、任务、轨迹和评测接入同一个 Python 接口。后端与研究模块分离，可替换其他开放世界引擎。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-当前处于端到端构建阶段，完整目标尚未完成。没有用替代游戏或生成图片冒充 Minecraft 运行结果。
+A Minecraft simulation environment for embodied AI research. It reuses **CraftGround 2.7.4 + Fabric + Minecraft 1.21 + Java 21** to bring real game sensors, actions, tasks, trajectories, and evaluation into a single Python interface. The backend is separate from the research modules and can be replaced with another open-world engine.
 
-实施优先级是整合已有开源功能。CraftGround 的原生 RGB、深度与移动已通过实机检查；Mindcraft 原有寻路、合成、放置和箱子存取技能已通过 Python 接口接入，两个 Agent 的通信与 MineCollab 双人合成任务在真实游戏中通过验证。本项目为 LLCL 等外部自主智能体提供游戏环境，不要求在此仓库重新实现世界模型、Actor/Critic 或训练循环。Mindcraft 的完整 LLM Agent 和完整 MineCollab 基准尚未接入；见 [复用决策记录](docs/reuse-plan.md)。
+The project is currently being built end to end, and the full set of goals has not yet been completed. No substitute games or generated images have been presented as Minecraft execution results.
 
-## 安装与运行
+The implementation prioritizes integrating existing open-source capabilities. CraftGround's native RGB, depth, and movement have passed checks in the actual game. Mindcraft's existing pathfinding, crafting, placement, and chest access skills are exposed through the Python interface, and communication between two agents and a two-player MineCollab crafting task have been verified in the real game. This project provides a game environment for external autonomous agents such as LLCL; it does not require reimplementing world models, Actor/Critic, or training loops in this repository. Mindcraft's full LLM agent and the complete MineCollab benchmark have not yet been integrated; see the [reuse decision record](docs/reuse-plan.md).
 
-要求 Python 3.11–3.13、Java **21**、CMake，以及 OpenGL/GLEW 开发库；Linux 无显示器时需要 Xvfb。首次启动需要下载 Minecraft 和 Gradle 依赖。使用独立实验世界。
+## Installation and Usage
+
+Requires Python 3.11–3.13, Java **21**, CMake, and OpenGL/GLEW development libraries. Headless Linux environments also need Xvfb. The first launch downloads Minecraft and Gradle dependencies. Use a separate experimental world.
 
 ```sh
 uv sync --extra minecraft
@@ -18,9 +20,9 @@ uv run --extra minecraft mcsociety doctor
 uv run --extra minecraft mcsociety rollout --scenario scenarios/exploration_forest.yaml
 ```
 
-本机是 NixOS，需要开发环境提供动态库搜索路径；详细说明见 [运行时文档](docs/runtime.md)。原生构建产物保存在 `.runtime/`，不修改全局 Minecraft 安装。`doctor` 只检查配置，不代表游戏已通过运行验证。
+The local development machine runs NixOS and requires the development environment to provide dynamic library search paths; see the [runtime documentation](docs/runtime.md) for details. Native build artifacts are stored in `.runtime/`, without modifying the global Minecraft installation. `doctor` checks configuration only; it does not mean the game has passed runtime verification.
 
-Python 使用方法：
+Python usage:
 
 ```python
 from mcsociety.worker_backend import SupervisedBackend
@@ -36,11 +38,11 @@ with Simulation(SupervisedBackend(), record_dir="runs") as env:
         Action(forward=True, yaw=30, ticks=5)
     )
     if not (terminated or truncated):
-        # 实验者的世界干预单独标注，不能作为 Agent 的生存技能。
+        # Researcher interventions are labeled separately and cannot count as agent survival skills.
         env.intervene(WorldEdit(operation="weather", value="rain"))
 ```
 
-Gymnasium：
+Gymnasium:
 
 ```python
 import gymnasium as gym
@@ -51,9 +53,9 @@ with gym.make("MCSociety-v0") as env:
     observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
 ```
 
-`observation` 包含 RGB、可选深度和 11 维本体状态；完整地形/背包/实体状态在 `info["state"]`。`camera` 是 `[pitch_delta, yaw_delta]`，单位为度；重复动作只在第一个 tick 改变相机。`ticks` 为 1–200，终止时提前停止。
+`observation` contains RGB, optional depth, and an 11-dimensional proprioceptive state; full terrain, inventory, and entity state is in `info["state"]`. `camera` is `[pitch_delta, yaw_delta]` in degrees; repeated actions change the camera only on the first tick. `ticks` ranges from 1 to 200, with early stopping on termination.
 
-## API、任务与数据
+## API, Tasks, and Data
 
 ```sh
 uv run --extra minecraft mcsociety serve --port 8765
@@ -61,24 +63,24 @@ uv run --extra minecraft mcsociety generate exploration --seed 7 --biome desert 
 uv run --extra minecraft mcsociety inspect-dataset runs
 ```
 
-API 默认只监听 `127.0.0.1`；文档位于 `http://127.0.0.1:8765/docs`。REST 提供 `/reset`、`/step`、`/world`、`/observation`，WebSocket 位于 `/ws`。接口按完整操作串行执行。Python 客户端在 `mcsociety.client`。
+By default, the API listens only on `127.0.0.1`; documentation is at `http://127.0.0.1:8765/docs`. REST provides `/reset`, `/step`, `/world`, and `/observation`, with WebSocket at `/ws`. The interface serializes complete operations. The Python client is in `mcsociety.client`.
 
-启用共享世界的 Mindcraft 高层技能时，先运行 `bash scripts/bootstrap_mindcraft.sh`，再用 `mcsociety serve --lan-port 55916` 启动服务。重置场景后，`POST /agents` 加入 Agent，`POST /agent-action` 调用 Mindcraft 的寻路、合成、放置、箱子存取或聊天技能；`GET /agents` 读取各 Bot 状态。Python 客户端对应 `start_agents()`、`agent_action()` 与 `observe_agents()`。技能执行期间的每个 CraftGround tick 都记录 `peer_action`；放置结果若在主视角 3×3×3 方块范围内，会等待原生观测确认，并返回 `observed_by_craftground`。
+To enable Mindcraft high-level skills in a shared world, first run `bash scripts/bootstrap_mindcraft.sh`, then start the service with `mcsociety serve --lan-port 55916`. After resetting the scenario, use `POST /agents` to add agents, `POST /agent-action` to invoke Mindcraft pathfinding, crafting, placement, chest access, or chat skills, and `GET /agents` to read each bot's state. The corresponding Python client methods are `start_agents()`, `agent_action()`, and `observe_agents()`. Every CraftGround tick during skill execution records `peer_action`. If the placement result is within the main viewpoint's 3×3×3 block region, the operation waits for native observation confirmation and returns `observed_by_craftground`.
 
-`POST /task` 接受固定 Mindcraft 源码内的 MineCollab 任务文件和任务 ID，例如 `{"source":"multiagent_crafting_tasks.json","task_id":"multiagent_techtree_1_shears"}`。当前仅支持 techtree 合成任务：接口按上游数据初始化各 Bot 背包，世界修改标注为 `assisted_setup`。`GET /task` 调用上游 `Task` 评测器，再用 Minecraft 服务端只计数的背包命令核对目标物品，分别返回 `success` 与 `server_success`；只有完整读到服务器回执时 `server_verified` 才为 `true`。Python 客户端提供 `start_task()` 和 `evaluate_task()`。
+`POST /task` accepts a MineCollab task file from the pinned Mindcraft source and a task ID, for example `{"source":"multiagent_crafting_tasks.json","task_id":"multiagent_techtree_1_shears"}`. Currently, only techtree crafting tasks are supported: the interface initializes each bot's inventory from upstream data, and world modifications are labeled `assisted_setup`. `GET /task` calls the upstream `Task` evaluator, then cross-checks target items using count-only inventory commands on the Minecraft server, returning `success` and `server_success` separately. `server_verified` is `true` only when the complete server response has been read. The Python client provides `start_task()` and `evaluate_task()`.
 
-LLCL 接入使用 [`LLCLGameAdapter`](src/mcsociety/llcl_adapter.py)：将真实 RGB 转成其既有的 64×64 图像输入，把有限的离散动作映射到 Minecraft 原语，并将任务成功、死亡和时间限制转换为按动作对齐的稀疏奖励与结束标记。评估坐标、目标距离、背包和地图不进入策略传感器；LLCL 现有 `AgentEpisode` 负责持续记忆、Actor/Critic 与训练。接法及当前限制见 [LLCL 接入说明](docs/llcl-integration.md)。
+LLCL integration uses [`LLCLGameAdapter`](src/mcsociety/llcl_adapter.py): it converts real RGB into LLCL's existing 64×64 image input, maps a finite set of discrete actions to Minecraft primitives, and converts task success, death, and time limits into sparse rewards and termination flags aligned with actions. Evaluation coordinates, goal distance, inventory, and maps are excluded from policy sensor inputs. LLCL's existing `AgentEpisode` handles persistent memory, Actor/Critic, and training. See the [LLCL integration notes](docs/llcl-integration.md) for setup and current limitations.
 
-场景 YAML 涵盖生存、探索、建造、社会协作，支持天气、资源、生物数量以及定时结冰事件。森林定义为训练域，沙漠定义为测试域；生成器输出 Minecraft 命令改变实际实验场地。当前内置场景是有限测试场地，不能代表整个开放世界任务分布。
+Scenario YAML covers survival, exploration, construction, and social cooperation, with support for weather, resources, creature counts, and timed freezing events. Forests are defined as the training domain and deserts as the test domain; the generator emits Minecraft commands to change the actual experimental area. Current built-in scenarios are limited test areas and do not represent the full distribution of open-world tasks.
 
-每个 episode 的目录包含元数据、观测和逐 tick 的 JSONL transition。RGB、depth、segmentation 数组以无损 NumPy 文件存储；动作重复展开为多个真实 tick。读取时检查相邻观测、终止边界和传感器形状。深度目前是 **OpenGL 非线性 0–1 缓冲值**，不是米制距离。
+Each episode directory contains metadata, observations, and per-tick JSONL transitions. RGB, depth, and segmentation arrays are stored as lossless NumPy files; repeated actions are expanded into multiple actual ticks. Reading checks adjacent observations, termination boundaries, and sensor shapes. Depth currently consists of **nonlinear OpenGL buffer values from 0 to 1**, not metric distances.
 
 ```python
 from mcsociety.dataset import TrajectoryDataset
 from mcsociety.memory import MemoryStore
 
 for sequence in TrajectoryDataset("runs").windows(length=8):
-    # sequence 中每项都有 observation、action、next_observation
+    # Each item in sequence contains observation, action, and next_observation.
     pass
 
 with MemoryStore("runs/memory.sqlite") as memory:
@@ -87,31 +89,31 @@ with MemoryStore("runs/memory.sqlite") as memory:
     memory.save_skill("walk_forward", "Move forward for five ticks", [{"forward": True, "ticks": 5}])
 ```
 
-空间和经历记忆按 agent/world 隔离。技能是声明式动作序列，`Controller.run_skill()` 可执行；不会动态执行任意 Python。`Controller.navigate()` 提供闭环朝向控制基线，不保证避障最优。
+Spatial and episodic memories are isolated by agent and world. Skills are declarative action sequences executed by `Controller.run_skill()`; arbitrary Python is not dynamically executed. `Controller.navigate()` provides a closed-loop heading-control baseline and does not guarantee optimal obstacle avoidance.
 
-## 能力边界与验证
+## Capabilities, Limitations, and Verification
 
-| 模块 | 已实现接口 | 尚需完成的目标 |
+| Module | Implemented Interfaces | Remaining Goals |
 |---|---|---|
-| 世界 | 原生状态转换、地形高度/3×3×3 方块、实体、物品、时刻、世界干预；森林/沙漠真实生物群系实测 | 实测干预回执、天气传感器、任意区域查询 |
-| 感知 | 真实 RGB、原生 depth 适配及实机检查、无损多模态数据格式 | 语义分割传感器和标定 |
-| 动作 | 移动/转向/跳跃/攻击/使用/快捷栏；Mindcraft 现成寻路/合成/放置/箱子存取/聊天技能的 Python 与 REST 接口、逐帧轨迹；LLCL 离散动作适配 | 建造任务所需的可靠游戏结果回执；规划循环由外部 Agent 提供 |
-| 记忆 | SQLite 空间、经历、技能持久化 | 开放世界 Agent 中的长期运行验证 |
-| World model | 对齐的 transition、序列窗口、可恢复日志；实机高层技能逐 tick 采集验收 | 多主体同时动作的因果归因与批量数据质量评估 |
-| 场景 | 四类模板、种子、域划分、定时事件 | 社会任务真实多 Agent 执行 |
-| 多 Agent | 两个 Mindcraft bot 同世界行动；游戏内通信和经箱子交接资源实机验证 | 同步多主体步进与冲突评测 |
-| 评测 | 观测驱动的成功率、规划效率、域与适应统计；MineCollab techtree 任务数据、原评测器及服务端物品计数的实机接入 | 完整 MineCollab 与真实游戏批量基准结果 |
+| World | Native state conversion; terrain height/3×3×3 blocks, entities, items, time, and world interventions; real-game checks of forest/desert biomes | Real-game checks of intervention acknowledgments, weather sensors, and arbitrary-region queries |
+| Perception | Real RGB, native depth adaptation and real-game checks, lossless multimodal data format | Semantic segmentation sensors and calibration |
+| Actions | Movement/turning/jumping/attacking/using/hotbar; Python and REST interfaces for Mindcraft's existing pathfinding/crafting/placement/chest access/chat skills, per-frame trajectories; LLCL discrete action adaptation | Reliable game-result acknowledgments required for construction tasks; planning loops are provided by external agents |
+| Memory | SQLite persistence for spatial, episodic, and skill memory | Long-running verification in open-world agents |
+| World model | Aligned transitions, sequence windows, recoverable logs; real-game acceptance checks for per-tick collection during high-level skills | Causal attribution for simultaneous multi-agent actions and batch data quality evaluation |
+| Scenarios | Four template categories, seeds, domain splits, and timed events | Actual multi-agent execution of social tasks |
+| Multi-agent | Two Mindcraft bots acting in the same world; in-game communication and resource handoffs through chests verified in the real game | Synchronous multi-agent stepping and conflict evaluation |
+| Evaluation | Observation-driven success rates, planning efficiency, domain and adaptation statistics; real-game integration of MineCollab techtree task data, the original evaluator, and server-side item counts | Full MineCollab and batch benchmark results in the real game |
 
-评测不会将“请求建造”当作建造成功：必须观测所有目标位置和内部空气。社会任务需要确认的物品转交及通信记录。没有可信最优解时，规划效率为 `null`；未确认规则事件发生时，适应后的指标为 `null`。相同 seed 控制世界与任务生成，不宣称 Minecraft 运行具有逐位确定性。
+Evaluation does not treat a “build request” as successful construction: all target positions and interior air blocks must be observed. Social tasks require confirmed item transfers and communication records. Without a trustworthy optimal solution, planning efficiency is `null`; when a rule event has not been confirmed to occur, post-adaptation metrics are `null`. The same seed controls world and task generation; no claim is made that Minecraft execution is bitwise deterministic.
 
 ```sh
 uv run pytest -q
 uv run ruff check src tests
 ```
 
-普通测试使用仅存在于测试目录中的后端替身，覆盖 API、Gym、轨迹和评测逻辑；它们不证明 Minecraft 本体可运行。真实游戏测试必须显式启用，见运行时文档。
+Regular tests use backend test doubles that exist only in the test directory, covering API, Gym, trajectory, and evaluation logic. They do not prove that Minecraft itself can run. Real-game tests must be explicitly enabled; see the runtime documentation.
 
-## 架构与来源
+## Architecture and Sources
 
 ```text
 LLM / VLM / RL policy
@@ -123,6 +125,6 @@ CraftGround socket IPC (isolated game worker)
 Fabric client + integrated Minecraft 1.21 server
 ```
 
-复用上游 socket 协议和同步 tick 实现，隔离进程限制游戏启动和动作等待时间；外部调用仍可使用 WebSocket。`Backend` 协议不依赖 Minecraft 具体类，研究侧轨迹和记忆可由其他引擎接入。
+The project reuses the upstream socket protocol and synchronous tick implementation. An isolated process bounds the time spent waiting for game startup and actions; external callers can still use WebSocket. The `Backend` protocol does not depend on Minecraft-specific classes, and the research-side trajectory and memory modules can be connected to other engines.
 
-许可证为 GPL-3.0-only。上游依赖、许可证证据和版本选择见 [THIRD_PARTY.md](THIRD_PARTY.md)。
+Licensed under GPL-3.0-only. See [THIRD_PARTY.md](THIRD_PARTY.md) for upstream dependencies, license evidence, and version choices.
